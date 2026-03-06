@@ -79,7 +79,6 @@ class AdminController extends Controller
 
             // Kirim WA
             $response = $this->kirimWhatsapp($nomor, $pesan);
-            \Log::info('WA response:', $response); // Log ke storage/logs
             return response()->json(['success' => true]);
         }
         return response()->json(['success' => false]);

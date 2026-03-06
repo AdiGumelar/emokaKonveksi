@@ -86,8 +86,6 @@ Route::middleware(['admin.session'])->group(function () {
     Route::get('/admin/work-order/cetak/{id}', [AdminController::class, 'cetakWorkOrder'])->name('admin.work-order.print');
 });
 
-
-
 //Manajemen Produk
 Route::middleware('admin.session')->prefix('admin')->group(function () {
     Route::get('/produk', [AdminController::class, 'produk'])->name('admin.produk');

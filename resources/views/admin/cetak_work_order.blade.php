@@ -77,13 +77,13 @@
       <table>
         <tr>
           <td class="bg-secondary text-white" style="white-space: nowrap">Client Name</td>
-          <td colspan="2" style="">{{ $pemesanan->nama }}</td>
+          <td colspan="2">{{ $pemesanan->nama }}</td>
           <td class="bg-secondary text-white" style="white-space: nowrap">Order Number</td>
           <td colspan="2">100</td>
         </tr>
         <tr>
           <td class="bg-secondary text-white" style="white-space: nowrap">Client Phone</td>
-          <td style="" colspan="2">{{ $pemesanan->nomor }}</td>
+          <td colspan="2">{{ $pemesanan->nomor }}</td>
           <td class="bg-secondary text-white" style="white-space: nowrap">Order Received By</td>
           <td colspan="2">ADIL</td>
         </tr>
@@ -99,14 +99,14 @@
 
       <table>
         <tr>
-          <td class="bg-secondary text-white" style="white-space: nowrap; width:">WORK ORDER COMPILED BY</td>
+          <td class="bg-secondary text-white" style="white-space: nowrap">WORK ORDER COMPILED BY</td>
           <td>Admin Emoka</td>
         </tr>
       </table>
 
       <table>
         <tr>
-          <td class="bg-secondary text-white" style="white-space: nowrap; width:">WORK</td>
+          <td class="bg-secondary text-white" style="white-space: nowrap">WORK</td>
           <td colspan="5">{{ $pemesanan->jenis_pakaian }}</td>
         </tr>
         <tr>
@@ -256,108 +256,8 @@
           <td colspan="2">{{ $detail->sum('jumlah') }}</td>
         </tr>
       </table>
-
-      <div class="mb-3">
-        @if ($excelData)
-          <div class="mt-3">
-            <h5>Data Ukuran</h5>
-            <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse">
-              @foreach ($excelData as $rowIdx => $row)
-                <tr>
-                  @php
-                    $skipCols = [];
-                  @endphp
-
-                  @foreach ($row as $colIdx => $cell)
-                    @if (in_array($colIdx, $skipCols))
-                      @continue
-                    @endif
-
-                    @php
-                      $colspan = 1;
-                      // Cek apakah cell termasuk merge
-                      foreach ($mergeCells as $range) {
-                        [$start, $end] = explode(':', $range);
-                        if ($start === $colIdx . $rowIdx) {
-                          // Hitung lebar merge
-                          preg_match('/([A-Z]+)(\d+)/', $start, $startMatch);
-                          preg_match('/([A-Z]+)(\d+)/', $end, $endMatch);
-                          $startCol = $startMatch[1];
-                          $endCol = $endMatch[1];
-                          $startColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($startCol);
-                          $endColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($endCol);
-                          $colspan = $endColIndex - $startColIndex + 1;
-
-                          // Tandai kolom yang harus diskip
-                          for ($i = $startColIndex + 1; $i <= $endColIndex; $i++) {
-                            $skipCols[] = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
-                          }
-                          break;
-                        }
-                      }
-                    @endphp
-
-                    <td @if($colspan > 1) colspan="{{ $colspan }}" @endif>
-                      {{ $cell }}
-                    </td>
-                  @endforeach
-                </tr>
-              @endforeach
-            </table>
-          </div>
-        @else
-          <h5 class="mt-3">Data Ukuran:</h5>
-          <div id="pdf-container"></div>
-        @endif
-      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
-
-    <script>
-      const url = '{{ asset($pemesanan->fileUkuran) }}'
-
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js'
-
-      const loadingTask = pdfjsLib.getDocument(url)
-      loadingTask.promise.then(
-        function (pdf) {
-          console.log('PDF loaded')
-
-          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-            pdf.getPage(pageNumber).then(function (page) {
-              const scale = 1.5
-              const viewport = page.getViewport({ scale: scale })
-
-              const canvas = document.createElement('canvas')
-              const context = canvas.getContext('2d')
-
-              // Tetap set ukuran asli
-              canvas.height = viewport.height
-              canvas.width = viewport.width
-
-              // Tambahkan canvas ke container
-              document.getElementById('pdf-container').appendChild(canvas)
-
-              // Render PDF ke canvas
-              const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-              }
-              page.render(renderContext).promise.then(() => {
-                // Setelah render, atur CSS agar responsif
-                canvas.style.width = '100%'
-                canvas.style.height = 'auto'
-                canvas.style.display = 'block'
-              })
-            })
-          }
-        },
-        function (reason) {
-          console.error('Error loading PDF:', reason)
-        },
-      )
-    </script>
   </body>
 </html>

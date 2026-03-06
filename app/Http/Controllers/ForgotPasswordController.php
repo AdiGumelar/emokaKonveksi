@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class ForgotPasswordController extends Controller
 {
@@ -40,7 +41,7 @@ class ForgotPasswordController extends Controller
         }
 
         // generate token dan kirim email
-        $genToken = strtoupper(\Str::random(6));
+        $genToken = strtoupper(Str::random(6));
         Session::put("reset_token_$email", $genToken);
 
         // Ganti dengan email konfigurasi Laravelmu
