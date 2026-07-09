@@ -32,32 +32,32 @@ Di sisi admin, aplikasi menyediakan dashboard ringkas untuk melihat pesanan, men
 
 ### Untuk Pelanggan
 
-| Fitur | Deskripsi |
-| --- | --- |
-| Landing page | Menampilkan profil Emoka, layanan, produk, portofolio, statistik, dan kontak. |
-| Registrasi dan login | Pelanggan dapat membuat akun dan masuk ke sistem. |
-| Form pemesanan | Pelanggan mengisi data pemesan, jenis pakaian, alamat, deskripsi pesanan, dan jumlah. |
-| Detail ukuran | Pesanan dapat memakai total jumlah langsung atau detail ukuran per item. |
-| Upload file ukuran | Mendukung file `pdf`, `xlsx`, `xls`, dan `csv`. |
-| Upload desain | Pelanggan dapat menambahkan beberapa desain seperti logo, tampak depan, tampak belakang, atau kebutuhan lain. |
-| Estimasi harga | Harga sementara dihitung dari jenis pakaian, ukuran, dan jumlah. |
-| Tracking pesanan | Pelanggan dapat melihat status pesanan yang sedang berjalan. |
-| Pembayaran Midtrans | Pesanan dengan status tertentu dapat dibayar melalui Midtrans Snap. |
-| Invoice pelanggan | Invoice dapat dibuka dan dicetak dari halaman pesanan. |
-| Pembatalan pesanan | Pelanggan dapat membatalkan pesanan yang masih memenuhi kondisi pembatalan. |
+| Fitur                | Deskripsi                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Landing page         | Menampilkan profil Emoka, layanan, produk, portofolio, statistik, dan kontak.                                 |
+| Registrasi dan login | Pelanggan dapat membuat akun dan masuk ke sistem.                                                             |
+| Form pemesanan       | Pelanggan mengisi data pemesan, jenis pakaian, alamat, deskripsi pesanan, dan jumlah.                         |
+| Detail ukuran        | Pesanan dapat memakai total jumlah langsung atau detail ukuran per item.                                      |
+| Upload file ukuran   | Mendukung file `pdf`, `xlsx`, `xls`, dan `csv`.                                                               |
+| Upload desain        | Pelanggan dapat menambahkan beberapa desain seperti logo, tampak depan, tampak belakang, atau kebutuhan lain. |
+| Estimasi harga       | Harga sementara dihitung dari jenis pakaian, ukuran, dan jumlah.                                              |
+| Tracking pesanan     | Pelanggan dapat melihat status pesanan yang sedang berjalan.                                                  |
+| Pembayaran Midtrans  | Pesanan dengan status tertentu dapat dibayar melalui Midtrans Snap.                                           |
+| Invoice pelanggan    | Invoice dapat dibuka dan dicetak dari halaman pesanan.                                                        |
+| Pembatalan pesanan   | Pelanggan dapat membatalkan pesanan yang masih memenuhi kondisi pembatalan.                                   |
 
 ### Untuk Admin
 
-| Fitur | Deskripsi |
-| --- | --- |
-| Dashboard admin | Menampilkan jumlah pengguna, pesanan menunggu, produksi, selesai, dan pesan masuk. |
-| Data pemesanan | Admin dapat melihat daftar pesanan pelanggan. |
-| Update status pesanan | Status pesanan dapat diperbarui sesuai proses produksi. |
-| Notifikasi WhatsApp | Pelanggan menerima pemberitahuan ketika pesanan dibuat atau status berubah. |
-| Pembuatan invoice | Admin dapat mengatur harga satuan dan total tiap detail pesanan. |
-| Manajemen produk | Admin dapat menambah dan menghapus produk beserta gambar utama dan gambar crop. |
-| Work order | Admin dapat mengisi detail produksi seperti tanggal, jenis kain, warna kain, dan furing. |
-| Cetak work order | Work order dapat dicetak, termasuk membaca data dari file Excel ukuran bila tersedia. |
+| Fitur                 | Deskripsi                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Dashboard admin       | Menampilkan jumlah pengguna, pesanan menunggu, produksi, selesai, dan pesan masuk.       |
+| Data pemesanan        | Admin dapat melihat daftar pesanan pelanggan.                                            |
+| Update status pesanan | Status pesanan dapat diperbarui sesuai proses produksi.                                  |
+| Notifikasi WhatsApp   | Pelanggan menerima pemberitahuan ketika pesanan dibuat atau status berubah.              |
+| Pembuatan invoice     | Admin dapat mengatur harga satuan dan total tiap detail pesanan.                         |
+| Manajemen produk      | Admin dapat menambah dan menghapus produk beserta gambar utama dan gambar crop.          |
+| Work order            | Admin dapat mengisi detail produksi seperti tanggal, jenis kain, warna kain, dan furing. |
+| Cetak work order      | Work order dapat dicetak, termasuk membaca data dari file Excel ukuran bila tersedia.    |
 
 ---
 
@@ -81,16 +81,16 @@ flowchart LR
 
 ## Teknologi
 
-| Bagian | Teknologi |
-| --- | --- |
-| Backend | Laravel 10, PHP 8.1+ |
-| Frontend | Blade, Bootstrap, jQuery, SweetAlert2 |
-| Build tool | Vite |
-| Database | MySQL atau database lain yang didukung Laravel |
-| Payment gateway | Midtrans Snap |
-| WhatsApp gateway | Wablas API |
-| Spreadsheet reader | PhpSpreadsheet |
-| UI assets | Bootstrap Icons, AOS, GLightbox, Swiper, Font Awesome |
+| Bagian             | Teknologi                                             |
+| ------------------ | ----------------------------------------------------- |
+| Backend            | Laravel 10, PHP 8.1+                                  |
+| Frontend           | Blade, Bootstrap, jQuery, SweetAlert2                 |
+| Build tool         | Vite                                                  |
+| Database           | MySQL atau database lain yang didukung Laravel        |
+| Payment gateway    | Midtrans Snap                                         |
+| WhatsApp gateway   | Wablas API                                            |
+| Spreadsheet reader | PhpSpreadsheet                                        |
+| UI assets          | Bootstrap Icons, AOS, GLightbox, Swiper, Font Awesome |
 
 ---
 
@@ -185,32 +185,19 @@ Konfigurasi WhatsApp gateway digunakan untuk mengirim pesan otomatis saat pesana
 
 ---
 
-## Akun Admin Default
-
-Aplikasi memiliki login admin sederhana melalui controller:
-
-```text
-Email    : admin@emoka.com
-Password : admin123
-```
-
-Setelah login sebagai admin, sistem akan mengarahkan ke dashboard admin.
-
----
-
 ## Status Pesanan
 
 Status pesanan yang digunakan dalam sistem:
 
-| Status | Keterangan |
-| --- | --- |
-| Menunggu | Pesanan baru masuk dan menunggu pengecekan admin. |
+| Status      | Keterangan                                                     |
+| ----------- | -------------------------------------------------------------- |
+| Menunggu    | Pesanan baru masuk dan menunggu pengecekan admin.              |
 | Belum Bayar | Invoice sudah dibuat dan pelanggan perlu melakukan pembayaran. |
-| Sudah Bayar | Pembayaran telah dilakukan. |
-| Produksi | Pesanan sedang diproduksi. |
-| Pengiriman | Pesanan sedang dikirim. |
-| Selesai | Pesanan telah selesai. |
-| Dibatalkan | Pesanan dibatalkan oleh pelanggan atau admin. |
+| Sudah Bayar | Pembayaran telah dilakukan.                                    |
+| Produksi    | Pesanan sedang diproduksi.                                     |
+| Pengiriman  | Pesanan sedang dikirim.                                        |
+| Selesai     | Pesanan telah selesai.                                         |
+| Dibatalkan  | Pesanan dibatalkan oleh pelanggan atau admin.                  |
 
 ---
 
