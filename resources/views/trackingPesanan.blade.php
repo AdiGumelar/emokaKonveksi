@@ -205,19 +205,25 @@
                           @endphp
 
                           @foreach ($desains as $desain)
+                            @php
+                              $extension = strtolower(pathinfo($desain["file"], PATHINFO_EXTENSION));
+                              $isImage = in_array($extension, ["jpg", "jpeg", "png", "webp", "gif"]);
+                            @endphp
                             <li class="list-group-item">
                               <strong>{{ $desain["nama"] }}:</strong>
                               <br />
 
-                              <img
-                                src="{{ asset($desain["file"]) }}"
-                                alt="Tampak Depan"
-                                class="img-fluid rounded my-2"
-                                style="max-height: 300px"
-                              />
-                              <br />
+                              @if ($isImage)
+                                <img
+                                  src="{{ asset($desain["file"]) }}"
+                                  alt="Tampak Depan"
+                                  class="img-fluid rounded my-2"
+                                  style="max-height: 300px"
+                                />
+                                <br />
+                              @endif
                               <a href="{{ asset($desain["file"]) }}" download class="btn btn-sm btn-success">
-                                Download
+                                {{ $isImage ? "Download" : "Download File" }}
                               </a>
                             </li>
                           @endforeach
@@ -313,52 +319,75 @@
     ></script>
 
     <script>
-      $('.btn-pay').on('click', function () {
-        const id = $(this).data('id')
-
-        Swal.fire({
-          title: 'Memuat pembayaran...',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading()
-          },
-        })
-
-        $.get(`/midtrans/token/${id}`, function (response) {
-          Swal.close()
-          window.snap.pay(response.token, {
-            onSuccess: function (result) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Pembayaran Berhasil!',
-                text: 'Transaksi Anda telah selesai.',
-              }).then(() => {
-                location.reload() // atau redirect ke halaman sukses
-              })
-            },
-            onPending: function (result) {},
-            onError: function (result) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Pembayaran Gagal!',
-                text: 'Terjadi kesalahan saat memproses transaksi.',
-              })
-            },
-            onClose: function () {
-              Swal.fire({
-                icon: 'warning',
-                title: 'Keluar',
-                text: 'Anda menutup jendela pembayaran tanpa menyelesaikannya.',
-              })
+      $(function () {
+        function showLoadingPayment() {
+          Swal.fire({
+            title: 'Memuat pembayaran...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading()
             },
           })
-        })
-      })
-    </script>
-    <script>
-      $(document).ready(function () {
-        $('.btn-batal-konfirmasi').on('click', function (e) {
+        }
+
+        function showPaymentSuccess() {
+          Swal.fire({
+            icon: 'success',
+            title: 'Pembayaran Berhasil!',
+            text: 'Transaksi Anda telah selesai.',
+          }).then(() => {
+            location.reload()
+          })
+        }
+
+        function showPaymentError() {
+          Swal.fire({
+            icon: 'error',
+            title: 'Pembayaran Gagal!',
+            text: 'Terjadi kesalahan saat memproses transaksi.',
+          })
+        }
+
+        function showPaymentClosedWarning() {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Keluar',
+            text: 'Anda menutup jendela pembayaran tanpa menyelesaikannya.',
+          })
+        }
+
+        function openMidtransPayment(token) {
+          window.snap.pay(token, {
+            onSuccess: function () {
+              showPaymentSuccess()
+            },
+            onPending: function () {},
+            onError: function () {
+              showPaymentError()
+            },
+            onClose: function () {
+              showPaymentClosedWarning()
+            },
+          })
+        }
+
+        function handlePayButtonClick() {
+          const id = $(this).data('id')
+
+          showLoadingPayment()
+
+          $.get(`/midtrans/token/${id}`, function (response) {
+            Swal.close()
+            openMidtransPayment(response.token)
+          }).fail(function () {
+            Swal.close()
+            showPaymentError()
+          })
+        }
+
+        function handleCancelOrderClick(e) {
           e.preventDefault()
+
           const form = $(this).closest('form')
 
           Swal.fire({
@@ -375,7 +404,10 @@
               form.submit()
             }
           })
-        })
+        }
+
+        $('.btn-pay').on('click', handlePayButtonClick)
+        $('.btn-batal-konfirmasi').on('click', handleCancelOrderClick)
       })
     </script>
   </body>

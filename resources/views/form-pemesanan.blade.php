@@ -355,7 +355,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-      $(document).ready(function () {
+      $(function () {
         let designs = [] // ✅ Global untuk desain
         let daftarUkuran = [] // ✅ Global untuk ukuran
 
@@ -379,8 +379,52 @@
           }
         }
 
-        // Hilangkan error saat user mengetik/ubah
-        $(document).on('input change', 'input, textarea', function () {
+        function formatDesignName(name) {
+          return name.trim().replace(/\w\S*/g, function (txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+          })
+        }
+
+        function showDesignError(message) {
+          $('#design-error').removeClass('d-none').text(message)
+        }
+
+        function hideDesignError() {
+          $('#design-error').addClass('d-none').text('')
+        }
+
+        function resetDesignInputs() {
+          $('#design-name').val('')
+          $('#design-file').val('')
+        }
+
+        function renderDesignList() {
+          const $designList = $('#design-list')
+          $designList.empty()
+
+          designs.forEach((design, index) => {
+            const fileExt = design.file.name.split('.').pop()
+
+            $designList.append(`
+              <li class="list-group-item d-flex justify-content-between align-items-center" data-index="${index}">
+                <span>${design.name}.${fileExt}</span>
+                <button type="button" class="btn btn-sm btn-danger btn-hapus-desain">Hapus</button>
+              </li>
+            `)
+          })
+        }
+
+        function showLoading(message) {
+          Swal.fire({
+            title: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading()
+            },
+          })
+        }
+
+        function handleFieldValidation() {
           const id = $(this).attr('id')
           const value = $(this).val().trim()
 
@@ -398,58 +442,29 @@
           } else if (value !== '') {
             clearError(this)
           }
-        })
+        }
 
         // === ✅ Tambah Desain ===
-        $('#add-design').on('click', function () {
-          const nameInput = document.getElementById('design-name')
-          const fileInput = document.getElementById('design-file')
-
-          const name = nameInput.value.trim().replace(/\w\S*/g, function (txt) {
-            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-          })
-          const file = fileInput.files[0]
-
-          const errorText = document.getElementById('design-error')
+        function handleAddDesign() {
+          const name = formatDesignName($('#design-name').val())
+          const file = $('#design-file')[0].files[0]
 
           if (!name || !file) {
-            errorText.classList.remove('d-none')
-            errorText.textContent = '*Silakan isi nama desain dan pilih file.'
+            showDesignError('*Silakan isi nama desain dan pilih file.')
             return
-          } else {
-            errorText.classList.add('d-none')
           }
 
-          const fileExt = file.name.split('.').pop()
-          const index = designs.length
+          hideDesignError()
           designs.push({ name: name, file: file })
+          renderDesignList()
+          resetDesignInputs()
+        }
 
-          const listItem = document.createElement('li')
-          listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center')
-          listItem.setAttribute('data-index', index)
-          listItem.innerHTML = `
-      <span>${name}.${fileExt}</span>
-      <button type="button" class="btn btn-sm btn-danger btn-hapus-desain">Hapus</button>
-    `
-
-          document.getElementById('design-list').appendChild(listItem)
-
-          // Hapus desain saat tombol diklik
-          listItem.querySelector('.btn-hapus-desain').addEventListener('click', function () {
-            const idx = parseInt(listItem.getAttribute('data-index'))
-            designs.splice(idx, 1)
-            listItem.remove()
-
-            // Perbarui ulang index setelah hapus
-            $('#design-list li').each(function (i) {
-              $(this).attr('data-index', i)
-              designs[i] = designs[i] // tetap urut
-            })
-          })
-
-          nameInput.value = ''
-          fileInput.value = ''
-        })
+        function handleRemoveDesign() {
+          const index = $(this).closest('li').data('index')
+          designs.splice(index, 1)
+          renderDesignList()
+        }
 
         // === ✅ Tambah Ukuran ===
         const hargaDasarMap = {
@@ -490,10 +505,10 @@
           hitungEstimasiHarga() // 🔁 panggil saat render ukuran
         }
 
-        $('#btn-tambah-ukuran').click(function () {
-          var ukuran = ($('#input-ukuran').val() || '').trim()
-          var jumlah = ($('#input-jumlah').val() || '').trim()
-          var lengan = ($('#input-lengan').val() || '').trim()
+        function handleAddUkuran() {
+          const ukuran = ($('#input-ukuran').val() || '').trim()
+          const jumlah = ($('#input-jumlah').val() || '').trim()
+          const lengan = ($('#input-lengan').val() || '').trim()
 
           if (ukuran === '' || jumlah === '' || parseInt(jumlah) < 1 || lengan === '') {
             Swal.fire({
@@ -505,7 +520,7 @@
             return
           }
 
-          const exist = daftarUkuran.find((e) => e.ukuran === ukuran && e.lengan === lengan)
+          const exist = daftarUkuran.find((item) => item.ukuran === ukuran && item.lengan === lengan)
           if (exist) {
             Swal.fire({
               icon: 'error',
@@ -520,13 +535,13 @@
           $('#input-jumlah').val('')
           $('#input-lengan').val('')
           renderUkuran()
-        })
+        }
 
-        $('#list-ukuran').on('click', '.btn-hapus-ukuran', function () {
-          var idx = $(this).data('index')
-          daftarUkuran.splice(idx, 1)
+        function handleRemoveUkuran() {
+          const index = $(this).data('index')
+          daftarUkuran.splice(index, 1)
           renderUkuran()
-        })
+        }
 
         function hitungEstimasiHarga() {
           const jenis = $('#jenis_pakaian').val()
@@ -550,10 +565,17 @@
           $('#input_estimasi_harga').val(total) // jika disimpan juga
         }
 
+        renderDesignList()
         renderUkuran()
 
+        $('#add-design').on('click', handleAddDesign)
+        $('#design-list').on('click', '.btn-hapus-desain', handleRemoveDesign)
+        $('#btn-tambah-ukuran').on('click', handleAddUkuran)
+        $('#list-ukuran').on('click', '.btn-hapus-ukuran', handleRemoveUkuran)
+        $(document).on('input change', 'input, textarea', handleFieldValidation)
+
         // === ✅ Submit Form ===
-        $('#formPemesanan').submit(function (e) {
+        $('#formPemesanan').on('submit', function (e) {
           e.preventDefault()
           let isValid = true
 
@@ -606,13 +628,7 @@
               formData.append(`designs[${index}][file]`, design.file)
             })
 
-            Swal.fire({
-              title: 'Mengirim data...',
-              allowOutsideClick: false,
-              didOpen: () => {
-                Swal.showLoading()
-              },
-            })
+            showLoading('Mengirim data...')
 
             $.ajaxSetup({
               headers: {
@@ -635,10 +651,12 @@
                     text: response.message,
                   }).then(() => {
                     form.reset()
-                    $('#design-list').empty()
                     $('.error-msg').remove()
+                    $('.is-invalid').removeClass('is-invalid')
                     designs = []
                     daftarUkuran = []
+                    hideDesignError()
+                    renderDesignList()
                     renderUkuran()
                   })
                 } else {
@@ -663,24 +681,26 @@
       })
     </script>
     <script>
-      $(document).ready(function () {
-        $('#toggle-detail').click(function () {
+      $(function () {
+        function toggleDetailUkuran() {
           const $detail = $('#detail-ukuran-wrapper')
           const $jumlah = $('#jumlah-pakaian')
+          const isHidden = $detail.hasClass('d-none')
 
-          if ($detail.hasClass('d-none')) {
-            // Tampilkan detail ukuran
+          if (isHidden) {
             $detail.removeClass('d-none')
             $jumlah.val('')
             $jumlah.prop('disabled', true)
-            $(this).text('- Sembunyikan Detail Ukuran')
-          } else {
-            // Sembunyikan detail ukuran
-            $detail.addClass('d-none')
-            $jumlah.prop('disabled', false)
-            $(this).text('+ Tambah Detail Ukuran')
+            $('#toggle-detail').text('- Sembunyikan Detail Ukuran')
+            return
           }
-        })
+
+          $detail.addClass('d-none')
+          $jumlah.prop('disabled', false)
+          $('#toggle-detail').text('+ Tambah Detail Ukuran')
+        }
+
+        $('#toggle-detail').on('click', toggleDetailUkuran)
       })
     </script>
   </body>

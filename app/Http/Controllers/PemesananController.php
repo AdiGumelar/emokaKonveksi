@@ -14,6 +14,7 @@ use Midtrans\Transaction;
 use Illuminate\Support\Facades\Log;
 use App\Models\Midtrans;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 
 class PemesananController extends Controller
@@ -208,7 +209,7 @@ class PemesananController extends Controller
             return response()->json(['token' => $midtrans->midtrans_token]);
         }
 
-        $total = DetailPesanan::where('pesanan_id', $id)->sum(\DB::raw('jumlah * harga_satuan'));
+        $total = DetailPesanan::where('pesanan_id', $id)->sum(DB::raw('jumlah * harga_satuan'));
 
 
         $orderId =  $id. '-' . now()->format('His');
