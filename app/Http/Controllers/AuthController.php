@@ -21,7 +21,7 @@ class AuthController extends Controller
         $password = $request->input('pw_give');
 
         // Autentikasi admin dummy 
-        if ($email === 'admin@emoka.com' && $password === 'admin123') {
+        if ($email === env('ADMIN_EMAIL') && $password === env('ADMIN_PASSWORD')) {
             session(['admin' => true]);
             return response()->json(['result' => 'dashboard']);
         }
