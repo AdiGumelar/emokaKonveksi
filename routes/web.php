@@ -57,11 +57,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/buat-pesanan', [PemesananController::class, 'buatPesanan'])->name('buat.pesanan');
 });
 
-//Tracking Pesanan
-Route::middleware(['auth'])->get('/tracking-pesanan', [PemesananController::class, 'trackingPesanan'])->name('tracking.pesanan');
-Route::get('/pelanggan/invoice/{id}', [PemesananController::class, 'invoice'])->name('admin.invoice');
-Route::get('/midtrans/token/{id}', [PemesananController::class, 'getPaymentToken']);
-Route::put('/pelanggan/pesanan/{id}/batal', [PemesananController::class, 'batalkanPesanan'])->name('pelanggan.batalkanPesanan');
+//Tracking Pesanan & Pembayaran
+Route::middleware(['auth'])->group(function () {
+    Route::get('/tracking-pesanan', [PemesananController::class, 'trackingPesanan'])->name('tracking.pesanan');
+    Route::get('/pelanggan/invoice/{id}', [PemesananController::class, 'invoice'])->name('admin.invoice');
+    Route::get('/midtrans/token/{id}', [PemesananController::class, 'getPaymentToken'])->name('midtrans.token');
+    Route::post('/midtrans/sync/{id}', [PemesananController::class, 'syncPaymentStatus'])->name('midtrans.sync');
+    Route::put('/pelanggan/pesanan/{id}/batal', [PemesananController::class, 'batalkanPesanan'])->name('pelanggan.batalkanPesanan');
+});
 
 //Profile
 Route::middleware(['auth'])->group(function () {

@@ -12,47 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
       rel="stylesheet"
     />
-    <style>
-      body {
-        font-family: 'Poppins', sans-serif;
-        margin: 0;
-        padding: 0;
-      }
-      .invoice-box {
-        width: 800px;
-        margin: auto;
-        padding: 30px;
-        border: 1px solid #ccc;
-      }
-
-      h3 {
-        text-align: center;
-        margin: 0;
-      }
-      .text-right {
-        text-align: right;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-      }
-      th,
-      td {
-        border: 1px solid #ccc;
-        padding: 5px;
-        text-align: center;
-      }
-      .no-border {
-        border: none;
-      }
-      .mt-2 {
-        margin-top: 8px;
-      }
-      .mt-4 {
-        margin-top: 20px;
-      }
-    </style>
+    <link href="{{ asset('css/cetak_work_order.css') }}" rel="stylesheet" />
   </head>
   <body onload="">
     <div class="invoice-box">

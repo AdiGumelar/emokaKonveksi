@@ -1,0 +1,14 @@
+.toggle-password {
+  position: absolute;
+  top: 70%;
+  right: 1rem;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1.2rem;
+
+  z-index: 2;
+}
+
+.position-relative .form-control {
+  padding-right: 2.75rem; /* untuk memberi ruang ke icon */
+}

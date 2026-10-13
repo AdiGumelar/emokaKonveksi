@@ -203,16 +203,31 @@ class PemesananController extends Controller
     {
         $pemesanan = Pemesanan::findOrFail($id);
 
-        // Jika sudah ada token dan masih pending, gunakan ulang
+        // 1. Otorisasi: Pastikan user yang login adalah pemilik pesanan atau admin
+        $username = Auth::user() ? Auth::user()->username : null;
+        if ($pemesanan->username !== $username && !session('admin')) {
+            return response()->json(['error' => 'Anda tidak memiliki akses ke pesanan ini.'], 403);
+        }
+
+        // 2. Validasi status pesanan: hanya 'Belum Bayar' yang dapat dibayar
+        if ($pemesanan->status !== 'Belum Bayar') {
+            return response()->json(['error' => 'Status pesanan saat ini tidak memerlukan pembayaran: ' . $pemesanan->status], 400);
+        }
+
+        // 3. Hitung total tagihan dari rincian detail pesanan
+        $total = (int) DetailPesanan::where('pesanan_id', $id)->sum(DB::raw('jumlah * harga_satuan'));
+
+        if ($total <= 0) {
+            return response()->json(['error' => 'Total tagihan belum ditentukan oleh admin atau bernilai 0.'], 400);
+        }
+
+        // 4. Cek apakah sudah ada token yang masih berstatus pending untuk pesanan ini
         $midtrans = $pemesanan->midtrans;
-        if ($midtrans && $midtrans->midtrans_status === 'pending') {
+        if ($midtrans && $midtrans->midtrans_status === 'pending' && !empty($midtrans->midtrans_token)) {
             return response()->json(['token' => $midtrans->midtrans_token]);
         }
 
-        $total = DetailPesanan::where('pesanan_id', $id)->sum(DB::raw('jumlah * harga_satuan'));
-
-
-        $orderId =  $id. '-' . now()->format('His');
+        $orderId = $id . '-' . now()->format('His');
 
         $params = [
             'transaction_details' => [
@@ -226,27 +241,102 @@ class PemesananController extends Controller
             ]
         ];
 
-        \Midtrans\Config::$curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
-        
-        \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
-        \Midtrans\Config::$clientKey = config('services.midtrans.client_key');
-        \Midtrans\Config::$isProduction = config('services.midtrans.is_production', false);
-        \Midtrans\Config::$isSanitized = true;
-        \Midtrans\Config::$is3ds = true;
-        
-        
-       $snapToken = \Midtrans\Snap::getSnapToken($params);
+        try {
+            \Midtrans\Config::$curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
+            \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
+            \Midtrans\Config::$clientKey = config('services.midtrans.client_key');
+            \Midtrans\Config::$isProduction = config('services.midtrans.is_production', false);
+            \Midtrans\Config::$isSanitized = true;
+            \Midtrans\Config::$is3ds = true;
 
-        Midtrans::updateOrCreate(
-            ['pemesanan_id' => $pemesanan->id],
-            [
-                'midtrans_order_id' => $orderId,
-                'midtrans_token' => $snapToken,
-                'midtrans_status' => 'pending',
-            ]
-        );
+            $snapToken = Snap::getSnapToken($params);
 
-        return response()->json(['token' => $snapToken]);
+            Midtrans::updateOrCreate(
+                ['pemesanan_id' => $pemesanan->id],
+                [
+                    'midtrans_order_id' => $orderId,
+                    'midtrans_token' => $snapToken,
+                    'midtrans_status' => 'pending',
+                ]
+            );
+
+            return response()->json(['token' => $snapToken]);
+        } catch (\Exception $e) {
+            Log::error("Midtrans Snap Error untuk {$id}: " . $e->getMessage());
+            return response()->json(['error' => 'Gagal memproses pembayaran ke Midtrans: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function syncPaymentStatus($id)
+    {
+        $pemesanan = Pemesanan::findOrFail($id);
+
+        // Otorisasi
+        $username = Auth::user() ? Auth::user()->username : null;
+        if ($pemesanan->username !== $username && !session('admin')) {
+            return response()->json(['error' => 'Akses ditolak.'], 403);
+        }
+
+        $midtrans = $pemesanan->midtrans;
+        if (!$midtrans || empty($midtrans->midtrans_order_id)) {
+            return response()->json(['status' => $pemesanan->status]);
+        }
+
+        try {
+            \Midtrans\Config::$curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
+            \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('services.midtrans.is_production', false);
+
+            $statusResponse = Transaction::status($midtrans->midtrans_order_id);
+            $transactionStatus = is_object($statusResponse) ? $statusResponse->transaction_status : ($statusResponse['transaction_status'] ?? null);
+            $fraudStatus = is_object($statusResponse) ? ($statusResponse->fraud_status ?? 'accept') : ($statusResponse['fraud_status'] ?? 'accept');
+
+            $midtrans->midtrans_status = $transactionStatus;
+            $midtrans->save();
+
+            $isPaid = false;
+            if ($transactionStatus === 'settlement') {
+                $isPaid = true;
+            } elseif ($transactionStatus === 'capture' && $fraudStatus === 'accept') {
+                $isPaid = true;
+            }
+
+            if ($isPaid && $pemesanan->status !== 'Sudah Bayar') {
+                $pemesanan->status = 'Sudah Bayar';
+                $pemesanan->save();
+
+                // Format nomor HP dan kirim WA
+                $nomor = str_replace([' ', '+', '-'], '', $pemesanan->nomor);
+                $nomor = preg_replace('/^0/', '62', $nomor);
+
+                $pesan = "Halo Kak {$pemesanan->nama},\n\n".
+                    "Pembayaran untuk pesanan dengan nomor invoice *{$pemesanan->id}* telah *BERHASIL DIVERIFIKASI*.\n\n".
+                    "📌 Status Pesanan: *Sudah Bayar (Siap Produksi)*\n\n".
+                    "Pesanan Anda akan segera diteruskan ke bagian produksi Emoka Konveksi.\n".
+                    "Terima kasih telah bertransaksi bersama kami.\n\n".
+                    "Salam hangat,\nTim Emoka Konveksi";
+
+                try {
+                    $this->kirimWhatsapp($nomor, $pesan);
+                } catch (\Exception $e) {
+                    Log::warning("Gagal kirim WA sync: " . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'status' => $pemesanan->status,
+                'midtrans_status' => $transactionStatus,
+                'is_paid' => $isPaid,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("Midtrans Sync Error untuk {$id}: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'status' => $pemesanan->status,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }
    
